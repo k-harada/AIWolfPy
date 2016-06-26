@@ -1,0 +1,210 @@
+---
+title: "GAT2016ミニ大会ログ集計"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+* GAT2016ミニ大会のログを取得して、各agentがどの役職のときにどんな行動をしているのかを集計してみました。
+	* 処刑投票(実際に処刑されたかどうかは無関係です)
+	* CO(自分の役職のみ、他人の役職のCOは除く)
+	* 占い／霊媒で、白出し／黒出し(偽も含む)
+	
+* こんな用途にどうぞ  
+	* 100戦の間での学習（というより人読み）が有効かどうかの判断材料に
+	* 他のエージェントの戦略の多様性の確認に
+
+##### 表の見方
+
+* 左から2列目が自分の役職、3列目以降が相手側の役職となります。
+	* 例：cashは自分が霊媒師(MEDIUM)のときに、騎士(BODYGUARD)に167回処刑投票した
+	
+
+##### 集計プログラム(R)
+
+```{r}
+# modify pwd
+setwd("/Users/KeiHarada/Documents/AIWolfPy")
+
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(data.table)
+
+# pwd
+#  |--log
+#      |--GAT2016log
+#          |--001
+#              |--000.log
+#          |--002
+
+# process one file
+vote_cnt <- function(filename){
+  
+  sample_log <- read.csv(filename, header=F, stringsAsFactors = F)
+  
+  
+  # get agents
+  agent_roles <- sample_log[1:15, ] %>% 
+    dplyr::select(agent_name = V6, agent = V3, ROLE = V4) 
+  
+  # count vote
+  vote_count <- sample_log %>% 
+    dplyr::filter(V2=="vote") %>% 
+    dplyr::select(agent=V3, agent_to=V4) %>% 
+    dplyr::left_join(agent_roles, by="agent") %>% 
+    dplyr::mutate(agent_to = as.integer(agent_to)) %>% 
+    dplyr::left_join(
+      agent_roles %>% 
+        dplyr::select(agent_to=agent, VOTE_TO=ROLE), by="agent_to"
+    ) %>% 
+    dplyr::select(-agent, -agent_to) %>% 
+    dplyr::mutate(type = "vote")
+  
+  # co_self
+  co_count_self <- sample_log %>% 
+    dplyr::filter(V2=="talk", substr(V5, 1, 9) == "COMINGOUT") %>% 
+    dplyr::mutate(
+      co_target = as.integer(substr(V5, 17, 18)), 
+      co_role = substr(V5, 21, nchar(V5)), 
+      type = "co_self"
+      ) %>% 
+    dplyr::filter(V4 == co_target) %>% 
+    dplyr::select(agent = co_target, VOTE_TO = co_role, type) %>% 
+    dplyr::left_join(agent_roles, by="agent") %>% 
+    dplyr::select(-agent)
+    
+  # divine_werewolf
+  divine_werewolf <- sample_log %>% 
+    dplyr::filter(
+      V2=="talk", substr(V5, 1, 7) == "DIVINED", 
+      substr(V5, 19, nchar(V5)) == "WEREWOLF"
+      ) %>% 
+    dplyr::mutate(
+      divine_target = as.integer(substr(V5, 15, 16)), 
+      type = "divine_werewolf", 
+      agent = as.integer(V4)
+      ) %>% 
+    dplyr::select(agent, divine_target, type) %>% 
+    dplyr::left_join(agent_roles, by="agent") %>% 
+    dplyr::left_join(
+      agent_roles %>% 
+        dplyr::select(divine_target=agent, VOTE_TO=ROLE), by="divine_target"
+    ) %>% 
+    dplyr::select(type, agent_name, ROLE, VOTE_TO)
+  
+  # divine_human
+  divine_human <- sample_log %>% 
+    dplyr::filter(
+      V2=="talk", substr(V5, 1, 7) == "DIVINED", 
+      substr(V5, 19, nchar(V5)) == "HUMAN"
+    ) %>% 
+    dplyr::mutate(
+      divine_target = as.integer(substr(V5, 15, 16)), 
+      type = "divine_human", 
+      agent = as.integer(V4)
+    ) %>% 
+    dplyr::select(agent, divine_target, type) %>% 
+    dplyr::left_join(agent_roles, by="agent") %>% 
+    dplyr::left_join(
+      agent_roles %>% 
+        dplyr::select(divine_target=agent, VOTE_TO=ROLE), by="divine_target"
+    ) %>% 
+    dplyr::select(type, agent_name, ROLE, VOTE_TO)
+  
+  # inquest_werewolf
+  inquest_werewolf <- sample_log %>% 
+    dplyr::filter(
+      V2=="talk", substr(V5, 1, 9) == "INQUESTED", 
+      substr(V5, 21, nchar(V5)) == "WEREWOLF"
+    ) %>% 
+    dplyr::mutate(
+      inquest_target = as.integer(substr(V5, 17, 18)), 
+      type = "inquest_werewolf", 
+      agent = as.integer(V4)
+    ) %>% 
+    dplyr::select(agent, inquest_target, type) %>% 
+    dplyr::left_join(agent_roles, by="agent") %>% 
+    dplyr::left_join(
+      agent_roles %>% 
+        dplyr::select(inquest_target=agent, VOTE_TO=ROLE), by="inquest_target"
+    ) %>% 
+    dplyr::select(type, agent_name, ROLE, VOTE_TO)
+  
+  # inquest_human
+  inquest_human <- sample_log %>% 
+    dplyr::filter(
+      V2=="talk", substr(V5, 1, 9) == "INQUESTED", 
+      substr(V5, 21, nchar(V5)) == "HUMAN"
+    ) %>% 
+    dplyr::mutate(
+      inquest_target = as.integer(substr(V5, 17, 18)), 
+      type = "inquest_human", 
+      agent = as.integer(V4)
+    ) %>% 
+    dplyr::select(agent, inquest_target, type) %>% 
+    dplyr::left_join(agent_roles, by="agent") %>% 
+    dplyr::left_join(
+      agent_roles %>% 
+        dplyr::select(inquest_target=agent, VOTE_TO=ROLE), by="inquest_target"
+    ) %>% 
+    dplyr::select(type, agent_name, ROLE, VOTE_TO)
+  
+  return(rbind_list(vote_count, co_count_self, divine_werewolf, divine_human, inquest_werewolf, inquest_human))
+}
+
+
+
+vote_cnt_1 <- function(i){
+  strf <- substr(as.character(1000+i), 2, 4)
+  files <- list.files(paste0("log/GAT2016Log/", strf))
+  # print(i)
+  return(rbind_all(lapply(paste0("log/GAT2016Log/", strf, "/", files), vote_cnt)))
+  
+}
+
+vote_all <- rbind_all(lapply(c(1:20, 22:236), vote_cnt_1))
+
+vote_cnt <- vote_all %>% 
+  dplyr::mutate(cnt = 1) %>% 
+  dcast(type + agent_name + ROLE ~ VOTE_TO, fun=sum, value.var="cnt")
+```
+
+### 処刑投票
+
+```{r}
+kable(vote_cnt %>% filter(type=="vote") %>% select(-type))
+```
+
+### CO
+
+```{r}
+kable(vote_cnt %>% filter(type=="co_self") %>% select(-type))
+```
+
+### 占い（結果：黒）
+
+```{r}
+kable(vote_cnt %>% filter(type=="divine_werewolf") %>% select(-type))
+```
+
+### 占い（結果：白）
+
+```{r}
+kable(vote_cnt %>% filter(type=="divine_human") %>% select(-type))
+```
+
+### 霊媒（結果：黒）
+
+```{r}
+kable(vote_cnt %>% filter(type=="inquest_werewolf") %>% select(-type))
+```
+
+### 霊媒（結果：白）
+
+```{r}
+kable(vote_cnt %>% filter(type=="inquest_human") %>% select(-type))
+```
