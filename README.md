@@ -15,6 +15,12 @@ aiwolf.orgさんの人狼知能サーバーに、pythonから接続するため�
 	
 * version0.4.9 の主な変更点
 	* 情報連携をDataFrameがデフォルトになるように変更
+
+* version0.4.11 の主な変更点
+	* 情報連携をDataFrameのみに変更
+	* contentbuilderの更新
+	* contentのparserを追加
+	* 
   
 * 必要な環境
 	* JRE(JDKが必要だったらゴメンなさい)
@@ -36,8 +42,8 @@ aiwolf.orgさんの人狼知能サーバーに、pythonから接続するため�
   	
 * python版の動かし方
 	* これをクローン
-	* クライアント接続のタイミングで、別プロセスで./python_sample.pyを実行
-	* 例：　./python_sample.py -h localhost -p 10000
+	* クライアント接続のタイミングで、別プロセスで./python_simple_sample.pyを実行
+	* 例：　./python_simple_sample.py -h localhost -p 10000
 		
 
 * 自分でエージェントを作るには
