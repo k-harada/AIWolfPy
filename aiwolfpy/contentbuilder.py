@@ -93,35 +93,35 @@ def parse(text, agent=None):
         
         if topic == "ESTIMATE":
             # 1. estimate(target, role)
-            res_dict["target"] = text_split[1][6:8]
+            res_dict["target"] = int(text_split[1][6:8])
             res_dict["role"] = text_split[2]
         elif topic == "COMINGOUT":
             # 2. comingout(target, role)
-            res_dict["target"] = text_split[1][6:8]
+            res_dict["target"] = int(text_split[1][6:8])
             res_dict["role"] = text_split[2]
-        elif topic == "COMINGOUT":
+        elif topic == "DIVINATION":
             # 3. divination(target)
-            res_dict["target"] = text_split[1][6:8]
+            res_dict["target"] = int(text_split[1][6:8])
         elif topic == "DIVINED":
             # 4. divined(target, result)
-            res_dict["target"] = text_split[1][6:8]
+            res_dict["target"] = int(text_split[1][6:8])
             res_dict["result"] = text_split[2]
         elif topic == "IDENTIFIED":
             # 5. identified(target, result)
-            res_dict["target"] = text_split[1][6:8]
+            res_dict["target"] = int(text_split[1][6:8])
             res_dict["result"] = text_split[2]
         elif topic == "GUARD":
             # 6. guard(target)
-            res_dict["target"] = text_split[1][6:8]
+            res_dict["target"] = int(text_split[1][6:8])
         elif topic == "GUARDED":
             # 7. guarded(target)
-            res_dict["target"] = text_split[1][6:8]
+            res_dict["target"] = int(text_split[1][6:8])
         elif topic == "VOTE":
             # 8. vote(target)
-            res_dict["target"] = text_split[1][6:8]
+            res_dict["target"] = int(text_split[1][6:8])
         elif topic == "ATTACK":
             # 9. attack(target)
-            res_dict["target"] = text_split[1][6:8]
+            res_dict["target"] = int(text_split[1][6:8])
         elif topic == "AGREE":
             # 10. agree(talkType, talkDay, talkID)
             res_dict["talkType"] = text_split[1]
