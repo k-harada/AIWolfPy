@@ -63,5 +63,5 @@ agent = SampleAgent(myname)
 
 # run
 if __name__ == '__main__':
-    aiwolfpy.connect_parse(agent)
+    aiwolfpy.connect(agent)
     
