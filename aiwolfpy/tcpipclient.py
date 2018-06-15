@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-TcpIpClient
+TcpIpClient_parsed
 
 @author: KeiHarada
-Date:2016/05/03
-UpDate:2016/12/15
-UpDate:2017/02/25
+Date:2017/06/18
 """
 
 from __future__ import print_function, division 
@@ -14,6 +12,7 @@ import socket
 from socket import error as SocketError
 import errno
 import json
+from .gameinfoparser import GameInfoParser
 
 def connect(agent):
     # parse Args
@@ -27,6 +26,9 @@ def connect(agent):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # connect
     sock.connect((aiwolf_host, aiwolf_port))
+    # parser
+    parser = GameInfoParser()
+    # base_info
     line = ''
     while True:
         try:
@@ -76,33 +78,98 @@ def connect(agent):
                 elif request == 'ROLE':
                     sock.send(('none\n').encode('utf-8'))
                 elif request == 'INITIALIZE':
+                    # game_setting
                     game_setting = obj_recv['gameSetting']
-                    agent.initialize(game_info, game_setting)
+                    # base_info
+                    base_info = dict()
+                    base_info['agentIdx'] = game_info['agent']
+                    base_info['myRole'] =  game_info["roleMap"][str(game_info['agent'])]
+                    base_info["roleMap"] = game_info["roleMap"]
+                    # update
+                    for k in ["day", "remainTalkMap", "remainWhisperMap", "statusMap"]:
+                        if k in game_info.keys():
+                            base_info[k] =  game_info[k]
+                    # parser
+                    parser.initialize(game_info, game_setting)
+                    agent.initialize(base_info, parser.get_gamedf_diff(), game_setting)
                 elif request == 'DAILY_INITIALIZE':
-                    agent.update(game_info, talk_history, whisper_history, request)
+                    # update
+                    for k in ["day", "remainTalkMap", "remainWhisperMap", "statusMap"]:
+                        if k in game_info.keys():
+                            base_info[k] =  game_info[k]
+                    parser.update(game_info, talk_history, whisper_history, request)
+                    agent.update(base_info, parser.get_gamedf_diff(), request)
+                    # call
                     agent.dayStart()
                 elif request == 'DAILY_FINISH':
-                    agent.update(game_info, talk_history, whisper_history, request)
+                    # update
+                    for k in ["day", "remainTalkMap", "remainWhisperMap", "statusMap"]:
+                        if k in game_info.keys():
+                            base_info[k] =  game_info[k]
+                    parser.update(game_info, talk_history, whisper_history, request)
+                    agent.update(base_info, parser.get_gamedf_diff(), request)
                 elif request == 'FINISH':
-                    agent.update(game_info, talk_history, whisper_history, request)
+                    # update
+                    for k in ["day", "remainTalkMap", "remainWhisperMap", "statusMap"]:
+                        if k in game_info.keys():
+                            base_info[k] =  game_info[k]
+                    parser.update(game_info, talk_history, whisper_history, request)
+                    agent.update(base_info, parser.get_gamedf_diff(), request)
+                    # call
                     agent.finish()
                 elif request == 'VOTE':
-                    agent.update(game_info, talk_history, whisper_history, request)
+                    # update
+                    for k in ["day", "remainTalkMap", "remainWhisperMap", "statusMap"]:
+                        if k in game_info.keys():
+                            base_info[k] =  game_info[k]
+                    parser.update(game_info, talk_history, whisper_history, request)
+                    agent.update(base_info, parser.get_gamedf_diff(), request)
+                    # call
                     sock.send((json.dumps({'agentIdx':int(agent.vote())}, separators=(',', ':')) + '\n').encode('utf-8'))
                 elif request == 'ATTACK':
-                    agent.update(game_info, talk_history, whisper_history, request)
+                    # update
+                    for k in ["day", "remainTalkMap", "remainWhisperMap", "statusMap"]:
+                        if k in game_info.keys():
+                            base_info[k] =  game_info[k]
+                    parser.update(game_info, talk_history, whisper_history, request)
+                    agent.update(base_info, parser.get_gamedf_diff(), request)
+                    # call
                     sock.send((json.dumps({'agentIdx':int(agent.attack())}, separators=(',', ':')) + '\n').encode('utf-8'))
                 elif request == 'GUARD':
-                    agent.update(game_info, talk_history, whisper_history, request)
+                    # update
+                    for k in ["day", "remainTalkMap", "remainWhisperMap", "statusMap"]:
+                        if k in game_info.keys():
+                            base_info[k] =  game_info[k]
+                    parser.update(game_info, talk_history, whisper_history, request)
+                    agent.update(base_info, parser.get_gamedf_diff(), request)
+                    # call
                     sock.send((json.dumps({'agentIdx':int(agent.guard())}, separators=(',', ':')) + '\n').encode('utf-8'))
                 elif request == 'DIVINE':
-                    agent.update(game_info, talk_history, whisper_history, request)
+                    # update
+                    for k in ["day", "remainTalkMap", "remainWhisperMap", "statusMap"]:
+                        if k in game_info.keys():
+                            base_info[k] =  game_info[k]
+                    parser.update(game_info, talk_history, whisper_history, request)
+                    agent.update(base_info, parser.get_gamedf_diff(), request)
+                    # call
                     sock.send((json.dumps({'agentIdx':int(agent.divine())}, separators=(',', ':')) + '\n').encode('utf-8'))
                 elif request == 'TALK':
-                    agent.update(game_info, talk_history, whisper_history, request)
+                    # update
+                    for k in ["day", "remainTalkMap", "remainWhisperMap", "statusMap"]:
+                        if k in game_info.keys():
+                            base_info[k] =  game_info[k]
+                    parser.update(game_info, talk_history, whisper_history, request)
+                    agent.update(base_info, parser.get_gamedf_diff(), request)
+                    # call
                     sock.send((agent.talk() + '\n').encode('utf-8'))
                 elif request == 'WHISPER':
-                    agent.update(game_info, talk_history, whisper_history, request)
+                    # update
+                    for k in ["day", "remainTalkMap", "remainWhisperMap", "statusMap"]:
+                        if k in game_info.keys():
+                            base_info[k] =  game_info[k]
+                    parser.update(game_info, talk_history, whisper_history, request)
+                    agent.update(base_info, parser.get_gamedf_diff(), request)
+                    # call
                     sock.send((agent.whisper() + '\n').encode('utf-8'))
         except SocketError as e:
             if e.errno != errno.ECONNRESET:
