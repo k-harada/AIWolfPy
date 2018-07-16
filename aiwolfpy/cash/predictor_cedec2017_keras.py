@@ -16,7 +16,7 @@ class Predictor_15(object):
     def __init__(self):
         
         # load model
-        model2 = load_model(os.path.dirname(__file__)+"data/model20170819_180715_10epochs.h5")
+        model2 = load_model(os.path.dirname(__file__)+"/data/model20170819_180715_10epochs.h5")
         self.get_5460 = K.function([model2.layers[0].input, model2.layers[2].input],[model2.layers[12].output])
         
         # num of param
