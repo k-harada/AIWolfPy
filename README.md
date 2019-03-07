@@ -1,3 +1,10 @@
+# 重要なお知らせ
+
+AIWolfPyは[本家](https://github.com/aiwolf/AIWolfPy)に移転しました。  
+こちらはただの1参加者のforkで、本家が公式になります。  
+引き続き開発には入ります、今後もよろしくお願いいたします。 
+2019/3/8
+
 # AIWolfPy
 
 aiwolf.orgさんの人狼知能サーバーに、pythonから接続するためのパッケージです。　　
